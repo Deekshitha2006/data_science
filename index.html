@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Lifestyle Health Analyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0e14;--card:#12151d;--card2:#181c27;--border:rgba(255,255,255,0.07);--text:#e8e6df;--muted:#6a6e85;--green:#34d399;--amber:#fbbf24;--red:#f87171;--blue:#60a5fa;--teal:#22d3ee;--purple:#a78bfa;--pink:#f472b6;--accent:#6ee7b7;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--border);background:rgba(11,14,20,0.96);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);}
+.logo{font-family:'Space Mono',monospace;font-size:1rem;color:var(--accent);letter-spacing:1px;}
+.logo span{color:var(--muted);}
+.pills{display:flex;gap:6px;flex-wrap:wrap;}
+.pill{font-size:10px;padding:3px 10px;border-radius:99px;background:rgba(110,231,183,0.08);color:var(--accent);border:1px solid rgba(110,231,183,0.18);font-weight:600;letter-spacing:.4px;}
+.pill.blue{background:rgba(96,165,250,0.08);color:var(--blue);border-color:rgba(96,165,250,0.2);}
+.pill.pink{background:rgba(244,114,182,0.08);color:var(--pink);border-color:rgba(244,114,182,0.2);}
+.wrap{max-width:1200px;margin:0 auto;padding:1.75rem 1.5rem 4rem;}
+.section-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:.85rem;margin-top:1.75rem;}
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:.5rem;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;border-top:2px solid var(--line,#333);}
+.stat .n{font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700;line-height:1;}
+.stat .d{font-size:10px;color:var(--muted);margin-top:5px;}
+.predictor{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.6rem;margin-bottom:1.25rem;margin-top:1.5rem;}
+.pred-head{margin-bottom:1.2rem;}
+.pred-head h2{font-size:1.05rem;font-weight:600;}
+.pred-head p{font-size:12px;color:var(--muted);margin-top:3px;}
+.sliders{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-bottom:1.25rem;}
+.sl{display:flex;flex-direction:column;gap:7px;}
+.sl-top{display:flex;justify-content:space-between;}
+.sl-name{font-size:11px;color:var(--muted);}
+.sl-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:var(--card2);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(110,231,183,0.18);}
+.result{display:grid;grid-template-columns:1fr 1fr;gap:1rem;background:var(--card2);border-radius:10px;padding:1.1rem 1.3rem;}
+.cal-num{font-family:'Space Mono',monospace;font-size:2.2rem;font-weight:700;color:var(--accent);line-height:1;}
+.cal-lbl{font-size:11px;color:var(--muted);margin-top:4px;}
+.rec{display:flex;flex-direction:column;justify-content:center;gap:5px;}
+.rec-status{font-size:13px;font-weight:700;}
+.rec-msg{font-size:12px;color:var(--muted);line-height:1.55;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.4rem;}
+.card h3{font-size:13px;font-weight:600;margin-bottom:3px;}
+.card p{font-size:11px;color:var(--muted);margin-bottom:1.1rem;}
+.ch{position:relative;width:100%;height:220px;}
+.ch-tall{position:relative;width:100%;height:280px;}
+.src-tag{display:inline-block;font-size:9px;padding:1px 7px;border-radius:99px;font-weight:600;letter-spacing:.4px;margin-left:6px;vertical-align:middle;}
+.src-daily{background:rgba(110,231,183,0.1);color:var(--accent);}
+.src-weight{background:rgba(244,114,182,0.1);color:var(--pink);}
+.src-hourly{background:rgba(96,165,250,0.1);color:var(--blue);}
+.coeff-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.coeff-row:last-child{border:none;}
+.cn{font-size:12px;color:var(--muted);}
+.cv{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;}
+.step-r{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.step-r:last-child{border:none;}
+.step-l{font-size:11px;color:var(--muted);width:55px;flex-shrink:0;}
+.step-bw{flex:1;background:var(--card2);border-radius:3px;height:7px;}
+.step-b{height:7px;border-radius:3px;}
+.step-c{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;width:55px;text-align:right;}
+#loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:1rem;}
+#loadingOverlay p{font-size:14px;color:var(--muted);}
+.spinner{width:36px;height:36px;border:3px solid var(--card2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-box{background:var(--card);border:1px solid rgba(248,113,113,0.3);border-radius:12px;padding:1.5rem 2rem;text-align:center;max-width:500px;}
+.error-box h3{color:var(--red);margin-bottom:.5rem;}
+.error-box p{font-size:13px;color:var(--muted);line-height:1.7;margin-top:.4rem;}
+.error-box code{font-family:'Space Mono',monospace;background:var(--card2);padding:2px 8px;border-radius:4px;font-size:12px;color:var(--accent);}
+@media(max-width:800px){.stat-row{grid-template-columns:repeat(3,1fr);}.grid2,.grid3{grid-template-columns:1fr;}.sliders{grid-template-columns:1fr 1fr;}.result{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadMsg">Loading all CSV files...</p>
+</div>
+
+<div class="topbar">
+  <div class="logo">health<span>_</span>analyzer</div>
+  <div class="pills">
+    <span class="pill">dailyActivity.csv</span>
+    <span class="pill pink">weightLogInfo.csv</span>
+    <span class="pill blue">hourlySteps.csv</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="section-label" style="margin-top:0">Dataset overview — 3 Kaggle Fitbit CSV files merged</div>
+  <div class="stat-row">
+    <div class="stat" style="--line:var(--green)"><div class="n" id="sRows">—</div><div class="d">activity records</div></div>
+    <div class="stat" style="--line:var(--blue)"><div class="n" id="sSteps">—</div><div class="d">avg daily steps</div></div>
+    <div class="stat" style="--line:var(--amber)"><div class="n" id="sCal">—</div><div class="d">avg calories</div></div>
+    <div class="stat" style="--line:var(--pink)"><div class="n" id="sBMI">—</div><div class="d">avg BMI</div></div>
+    <div class="stat" style="--line:var(--red)"><div class="n" id="sSed">—</div><div class="d">avg sedentary (min)</div></div>
+  </div>
+
+  <!-- PREDICTOR -->
+  <div class="predictor">
+    <div class="pred-head">
+      <h2>Calorie Burn Predictor</h2>
+      <p>Linear Regression trained on dailyActivity_merged.csv · adjust sliders to get real-time prediction</p>
+    </div>
+    <div class="sliders">
+      <div class="sl">
+        <div class="sl-top"><span class="sl-name">Total Steps</span><span class="sl-val" id="sv0">8000</span></div>
+        <input type="range" id="r0" min="0" max="30000" step="100" value="8000">
+      </div>
+      <div class="sl">
+        <div class="sl-top"><span class="sl-name">Very Active Min</span><span class="sl-val" id="sv1">23</span></div>
+        <input type="range" id="r1" min="0" max="210" step="1" value="23">
+      </div>
+      <div class="sl">
+        <div class="sl-top"><span class="sl-name">Sedentary Min</span><span class="sl-val" id="sv2">956</span></div>
+        <input type="range" id="r2" min="0" max="1440" step="10" value="956">
+      </div>
+    </div>
+    <div class="result">
+      <div>
+        <div class="cal-num" id="calOut">—</div>
+        <div class="cal-lbl">predicted kcal burned today</div>
+      </div>
+      <div class="rec">
+        <div class="rec-status" id="recS">—</div>
+        <div class="rec-msg"   id="recM">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Steps vs Cal + Active vs Cal -->
+  <div class="section-label">Activity analysis <span class="src-tag src-daily">dailyActivity_merged.csv</span></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Steps vs Calories</h3>
+      <p>Each dot = one real day · colour = step range</p>
+      <div class="ch"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Very Active Minutes vs Calories</h3>
+      <p>More vigorous activity → higher calorie burn</p>
+      <div class="ch"><canvas id="c2"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Hourly steps + Hourly calories -->
+  <div class="section-label">Hourly patterns <span class="src-tag src-hourly">hourlySteps_merged.csv · hourlyCalories_merged.csv</span></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Avg Steps by Hour of Day</h3>
+      <p>When are Fitbit users most active?</p>
+      <div class="ch"><canvas id="c3"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Avg Calories Burned by Hour</h3>
+      <p>Calorie burn pattern across 24 hours</p>
+      <div class="ch"><canvas id="c4"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Weight/BMI + Activity breakdown -->
+  <div class="section-label">Weight & body <span class="src-tag src-weight">weightLogInfo_merged.csv</span></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>BMI Distribution</h3>
+      <p>8 users with weight log data</p>
+      <div class="ch"><canvas id="c7"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Activity Minutes Breakdown</h3>
+      <p>Avg minutes per activity level per day</p>
+      <div class="ch"><canvas id="c8"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ROW 4: Bucket + Model -->
+  <div class="section-label">Model insights <span class="src-tag src-daily">dailyActivity_merged.csv</span></div>
+  <div class="grid3">
+    <div class="card">
+      <h3>Avg Calories by Step Range</h3>
+      <p>Grouped from 863 clean records</p>
+      <div class="ch"><canvas id="c9"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Linear Regression Coefficients</h3>
+      <p>Trained on full dailyActivity CSV</p>
+      <div id="coeffDiv" style="padding-top:.4rem;"></div>
+    </div>
+    <div class="card">
+      <h3>Steps → Calories Scale</h3>
+      <p>Avg calories at each step bucket</p>
+      <div id="stepDiv" style="padding-top:.4rem;"></div>
+    </div>
+  </div>
+
+  <!-- ROW 5: Lifestyle comparison full width -->
+  <div class="card">
+    <h3>Lifestyle Prediction Comparison</h3>
+    <p>7 profiles predicted using Linear Regression trained on your Kaggle data</p>
+    <div class="ch-tall"><canvas id="c10"></canvas></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  LINEAR REGRESSION (OLS — Gaussian elimination in JS)
+// ══════════════════════════════════════════════════════════════
+function fitLR(data){
+  const n=data.length;
+  let s1=0,s2=0,s3=0,sy=0,s11=0,s12=0,s13=0,s22=0,s23=0,s33=0,s1y=0,s2y=0,s3y=0;
+  for(const d of data){
+    const {x1,x2,x3,y}=d;
+    s1+=x1;s2+=x2;s3+=x3;sy+=y;
+    s11+=x1*x1;s12+=x1*x2;s13+=x1*x3;
+    s22+=x2*x2;s23+=x2*x3;s33+=x3*x3;
+    s1y+=x1*y;s2y+=x2*y;s3y+=x3*y;
+  }
+  const A=[[n,s1,s2,s3],[s1,s11,s12,s13],[s2,s12,s22,s23],[s3,s13,s23,s33]];
+  const b=[sy,s1y,s2y,s3y];
+  for(let c=0;c<4;c++){
+    let mx=c;for(let r=c+1;r<4;r++)if(Math.abs(A[r][c])>Math.abs(A[mx][c]))mx=r;
+    [A[c],A[mx]]=[A[mx],A[c]];[b[c],b[mx]]=[b[mx],b[c]];
+    const p=A[c][c];if(Math.abs(p)<1e-10)continue;
+    for(let k=c;k<4;k++)A[c][k]/=p;b[c]/=p;
+    for(let r=0;r<4;r++){if(r===c)continue;const f=A[r][c];for(let k=c;k<4;k++)A[r][k]-=f*A[c][k];b[r]-=f*b[c];}
+  }
+  return b;
+}
+
+function r2(actual,pred){
+  const m=actual.reduce((a,b)=>a+b,0)/actual.length;
+  const tot=actual.reduce((a,v)=>a+(v-m)**2,0);
+  const res=actual.reduce((a,v,i)=>a+(v-pred[i])**2,0);
+  return (1-res/tot).toFixed(4);
+}
+
+const avg=arr=>arr.reduce((a,b)=>a+b,0)/arr.length;
+
+// ══════════════════════════════════════════════════════════════
+//  PARSE CSVs
+// ══════════════════════════════════════════════════════════════
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/\r/g,''));
+  return lines.slice(1).map(line=>{
+    const cols=line.split(',');
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(cols[i]||'').trim().replace(/\r/g,''));
+    return obj;
+  });
+}
+
+function getHour(str){
+  const parts=str.split(' ');
+  let h=parseInt(parts[1].split(':')[0]);
+  if(parts[2]==='PM'&&h!==12) h+=12;
+  if(parts[2]==='AM'&&h===12) h=0;
+  return h;
+}
+
+Chart.defaults.color='#6a6e85';
+Chart.defaults.font.family="'Space Grotesk',sans-serif";
+const grd={color:'rgba(255,255,255,0.04)'};
+const tck={color:'#6a6e85',font:{size:10}};
+
+async function init(){
+  try{
+    document.getElementById('loadMsg').textContent='Loading dailyActivity_merged.csv...';
+    const [t1,t3,t4,t5] = await Promise.all([
+      fetch('dailyActivity_merged.csv').then(r=>r.text()),
+      fetch('weightLogInfo_merged.csv').then(r=>r.text()),
+      fetch('hourlySteps_merged.csv').then(r=>r.text()),
+      fetch('hourlyCalories_merged.csv').then(r=>r.text()),
+    ]);
+    document.getElementById('loadMsg').textContent='Processing data...';
+
+    // ── Parse ────────────────────────────────────────────────
+    const DA = parseCSV(t1).filter(d=>+d.TotalSteps>0&&+d.Calories>0);
+    const WT = parseCSV(t3);
+    const HS = parseCSV(t4);
+    const HC = parseCSV(t5);
+
+    // ── Hourly averages ──────────────────────────────────────
+    const hSteps=Array(24).fill(0), hStepCount=Array(24).fill(0);
+    HS.forEach(r=>{ const h=getHour(r.ActivityHour); hSteps[h]+=+r.StepTotal; hStepCount[h]++; });
+    const hourlySteps=hSteps.map((s,i)=>hStepCount[i]?+(s/hStepCount[i]).toFixed(1):0);
+
+    const hCal=Array(24).fill(0), hCalCount=Array(24).fill(0);
+    HC.forEach(r=>{ const h=getHour(r.ActivityHour); hCal[h]+=+r.Calories; hCalCount[h]++; });
+    const hourlyCal=hCal.map((s,i)=>hCalCount[i]?+(s/hCalCount[i]).toFixed(2):0);
+
+    // ── Weight/BMI ───────────────────────────────────────────
+    const bmiMap={};
+    WT.forEach(r=>{ if(!bmiMap[r.Id]) bmiMap[r.Id]=[]; bmiMap[r.Id].push(+r.BMI); });
+    const bmiValues=Object.values(bmiMap).map(arr=>+(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1));
+
+    // ── Train Linear Regression on full dailyActivity ────────
+    document.getElementById('loadMsg').textContent='Training model...';
+    const lrData=DA.map(d=>({x1:+d.TotalSteps,x2:+d.VeryActiveMinutes,x3:+d.SedentaryMinutes,y:+d.Calories}));
+    const [B0,B1,B2,B3]=fitLR(lrData);
+    const predict=(s,a,d)=>Math.round(B0+B1*s+B2*a+B3*d);
+
+    const allActual=DA.map(d=>+d.Calories);
+    const allPred=DA.map(d=>predict(+d.TotalSteps,+d.VeryActiveMinutes,+d.SedentaryMinutes));
+    const R2=r2(allActual,allPred);
+    const RMSE=Math.round(Math.sqrt(avg(allActual.map((a,i)=>(a-allPred[i])**2))));
+
+    // ── Stat cards ───────────────────────────────────────────
+    document.getElementById('sRows').textContent=DA.length.toLocaleString();
+    document.getElementById('sSteps').textContent=Math.round(avg(DA.map(d=>+d.TotalSteps))).toLocaleString();
+    document.getElementById('sCal').textContent=Math.round(avg(DA.map(d=>+d.Calories))).toLocaleString();
+    document.getElementById('sBMI').textContent=bmiValues.length?+(avg(bmiValues)).toFixed(1):'—';
+    document.getElementById('sSed').textContent=Math.round(avg(DA.map(d=>+d.SedentaryMinutes)));
+
+    // ── Coefficient table ────────────────────────────────────
+    document.getElementById('coeffDiv').innerHTML=[
+      {n:'Intercept',v:B0.toFixed(2),c:'var(--text)'},
+      {n:'× TotalSteps',v:'+'+B1.toFixed(5),c:'var(--green)'},
+      {n:'× VeryActiveMin',v:'+'+B2.toFixed(3),c:'var(--teal)'},
+      {n:'× SedentaryMin',v:B3.toFixed(4),c:'var(--amber)'},
+      {n:'R² Score',v:R2,c:'var(--blue)'},
+      {n:'RMSE',v:RMSE+' kcal',c:'var(--muted)'},
+    ].map(r=>`<div class="coeff-row"><span class="cn">${r.n}</span><span class="cv" style="color:${r.c}">${r.v}</span></div>`).join('');
+
+    // ── Step bucket table ────────────────────────────────────
+    const buckets=[{l:'< 5k',mn:0,mx:5000},{l:'5k-8k',mn:5000,mx:8000},{l:'8k-12k',mn:8000,mx:12000},{l:'12k+',mn:12000,mx:99999}];
+    const bucketAvg=buckets.map(b=>{const g=DA.filter(d=>+d.TotalSteps>=b.mn&&+d.TotalSteps<b.mx);return g.length?Math.round(avg(g.map(d=>+d.Calories))):0;});
+    const maxCal=Math.max(...bucketAvg);
+    const barColors=['#f87171','#fbbf24','#60a5fa','#34d399'];
+    document.getElementById('stepDiv').innerHTML=buckets.map((b,i)=>`
+    <div class="step-r">
+      <div class="step-l">${b.l}</div>
+      <div class="step-bw"><div class="step-b" style="width:${Math.round(bucketAvg[i]/maxCal*100)}%;background:${barColors[i]}"></div></div>
+      <div class="step-c">${bucketAvg[i].toLocaleString()}</div>
+    </div>`).join('');
+
+    // ══════════════════════════════════════════════════════════
+    //  CHARTS
+    // ══════════════════════════════════════════════════════════
+
+    // C1 — Steps vs Calories scatter
+    const sample=DA.filter((_,i)=>i%4===0);
+    new Chart(document.getElementById('c1'),{type:'scatter',
+      data:{datasets:[{data:sample.map(d=>({x:+d.TotalSteps,y:+d.Calories})),
+        backgroundColor:sample.map(d=>+d.TotalSteps>12000?'rgba(52,211,153,.55)':+d.TotalSteps>8000?'rgba(96,165,250,.5)':+d.TotalSteps>5000?'rgba(251,191,36,.5)':'rgba(248,113,113,.5)'),
+        pointRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{title:{display:true,text:'Total Steps',color:'#6a6e85'},grid:grd,ticks:tck},y:{title:{display:true,text:'Calories',color:'#6a6e85'},grid:grd,ticks:tck}}}});
+
+    // C2 — Active minutes vs Calories
+    new Chart(document.getElementById('c2'),{type:'scatter',
+      data:{datasets:[{data:DA.filter((_,i)=>i%4===0).map(d=>({x:+d.VeryActiveMinutes,y:+d.Calories})),
+        backgroundColor:'rgba(34,211,238,.4)',pointRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{title:{display:true,text:'Very Active Minutes',color:'#6a6e85'},grid:grd,ticks:tck},y:{title:{display:true,text:'Calories',color:'#6a6e85'},grid:grd,ticks:tck}}}});
+
+    // C3 — Hourly steps
+    const hours=Array.from({length:24},(_,i)=>`${i}:00`);
+    new Chart(document.getElementById('c3'),{type:'bar',
+      data:{labels:hours,datasets:[{data:hourlySteps,
+        backgroundColor:hourlySteps.map(v=>v>300?'rgba(52,211,153,.8)':v>150?'rgba(96,165,250,.7)':'rgba(110,231,183,.35)'),
+        borderRadius:3,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:grd,ticks:{...tck,maxRotation:0}},y:{grid:grd,ticks:tck,title:{display:true,text:'Avg Steps',color:'#6a6e85'}}}}});
+
+    // C4 — Hourly calories
+    new Chart(document.getElementById('c4'),{type:'line',
+      data:{labels:hours,datasets:[{data:hourlyCal,borderColor:'var(--amber)',backgroundColor:'rgba(251,191,36,0.1)',
+        borderWidth:2,pointRadius:2,fill:true,tension:0.4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:grd,ticks:{...tck,maxRotation:0}},y:{grid:grd,ticks:tck,title:{display:true,text:'Avg Calories',color:'#6a6e85'}}}}});
+
+    // C7 — BMI bar
+    const bmiLabels = [
+  ['Underweight', '(<18.5)'],
+  ['Normal', '(18.5-25)'],
+  ['Overweight', '(25-30)'],
+  ['Obese', '(30+)']
+];
+    const bmiCounts=[0,0,0,0];
+    bmiValues.forEach(b=>{ if(b<18.5)bmiCounts[0]++;else if(b<25)bmiCounts[1]++;else if(b<30)bmiCounts[2]++;else bmiCounts[3]++; });
+    new Chart(document.getElementById('c7'),{type:'bar',
+      data:{labels:bmiLabels,datasets:[{data:bmiCounts,
+        backgroundColor:['rgba(96,165,250,.75)','rgba(52,211,153,.75)','rgba(251,191,36,.75)','rgba(248,113,113,.75)'],
+        borderRadius:6,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>`${c.parsed.y} user(s)`}}},
+        scales:{x:{grid:grd,ticks:tck},y:{grid:grd,ticks:{...tck,stepSize:1},beginAtZero:true}}}});
+
+    // C8 — Activity donut
+    const avgV=Math.round(avg(DA.map(d=>+d.VeryActiveMinutes)));
+    const avgF=Math.round(avg(DA.map(d=>+d.FairlyActiveMinutes)));
+    const avgL=Math.round(avg(DA.map(d=>+d.LightlyActiveMinutes)));
+    const avgS=Math.round(avg(DA.map(d=>+d.SedentaryMinutes)));
+    new Chart(document.getElementById('c8'),{type:'doughnut',
+      data:{labels:['Very Active','Fairly Active','Lightly Active','Sedentary'],
+        datasets:[{data:[avgV,avgF,avgL,avgS],
+          backgroundColor:['rgba(52,211,153,.85)','rgba(96,165,250,.85)','rgba(251,191,36,.75)','rgba(248,113,113,.75)'],
+          borderWidth:0,hoverOffset:5}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+        plugins:{legend:{position:'bottom',labels:{padding:12,font:{size:11}}},
+          tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed} min/day`}}}}});
+
+    // C9 — Bucket bar
+    new Chart(document.getElementById('c9'),{type:'bar',
+      data:{labels:buckets.map(b=>b.l),datasets:[{data:bucketAvg,
+        backgroundColor:['rgba(248,113,113,.75)','rgba(251,191,36,.75)','rgba(96,165,250,.75)','rgba(52,211,153,.75)'],
+        borderRadius:6,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:grd,ticks:tck},y:{grid:grd,ticks:tck,beginAtZero:false,min:1500}}}});
+
+    // C10 — Lifestyle comparison
+    const profiles=[
+      {n:'Couch Potato',s:1200,a:5,d:1100},{n:'Desk Worker',s:3000,a:0,d:1200},
+      {n:'Light Walker',s:5000,a:10,d:800},{n:'Moderate',s:7500,a:30,d:600},
+      {n:'10k Goal',s:10000,a:40,d:500},{n:'Active',s:15000,a:70,d:350},{n:'Athlete',s:20000,a:90,d:250},
+    ];
+    const pp=profiles.map(p=>predict(p.s,p.a,p.d));
+    new Chart(document.getElementById('c10'),{type:'bar',
+      data:{labels:profiles.map(p=>p.n),datasets:[{data:pp,
+        backgroundColor:pp.map(v=>v>=3000?'rgba(52,211,153,.8)':v>=2500?'rgba(96,165,250,.8)':v>=2000?'rgba(251,191,36,.8)':'rgba(248,113,113,.8)'),
+        borderRadius:8,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y.toLocaleString()} kcal`}}},
+        scales:{x:{grid:grd,ticks:{...tck,font:{size:12}}},
+          y:{grid:grd,ticks:tck,beginAtZero:false,min:1200,title:{display:true,text:'Predicted Calories (kcal)',color:'#6a6e85'}}}}});
+
+    // ── Live predictor ───────────────────────────────────────
+    function upd() {
+      const s=+document.getElementById('r0').value;
+      const a=+document.getElementById('r1').value;
+      const d=+document.getElementById('r2').value;
+      document.getElementById('sv0').textContent=s.toLocaleString();
+      document.getElementById('sv1').textContent=a;
+      document.getElementById('sv2').textContent=d;
+      const cal=predict(s,a,d);
+      document.getElementById('calOut').textContent=cal.toLocaleString()+' kcal';
+      let st,msg,col;
+      if(s<5000){st='Sedentary ❌';msg='Under 5,000 steps. Walk more throughout the day.';col='var(--red)';}
+      else if(d>900){st='Too Sedentary ⚠️';msg='Over 900 min sitting. Take a break every hour.';col='var(--amber)';}
+      else if(s>=10000&&a>=30){st='Excellent ✅';msg='Great steps + active minutes — keep it up!';col='var(--green)';}
+      else if(s>=8000){st='Good ✅';msg='Hitting 8,000 steps. Push for 10,000!';col='var(--teal)';}
+      else{st='Moderate ⚠️';msg='Add more steps or vigorous exercise.';col='var(--amber)';}
+      const rs=document.getElementById('recS');
+      rs.textContent=st;rs.style.color=col;
+      document.getElementById('recM').textContent=msg;
+    }
+    ['r0','r1','r2'].forEach(id=>document.getElementById(id).addEventListener('input',upd));
+    upd();
+
+    document.getElementById('loadingOverlay').style.display='none';
+
+  } catch(e){
+    document.getElementById('loadingOverlay').innerHTML=`
+    <div class="error-box">
+      <h3>CSV files not found</h3>
+      <p>Place these files in the same folder as the HTML:</p>
+      <p><code>dailyActivity_merged.csv</code></p>
+      <p><code>weightLogInfo_merged.csv</code></p>
+      <p><code>hourlySteps_merged.csv</code></p>
+      <p><code>hourlyCalories_merged.csv</code></p>
+      <p style="margin-top:.75rem">Then run: <code>python -m http.server 8000</code><br>
+      or: <code>node -e "require('http').createServer(...)"</code></p>
+    </div>`;
+  }
+}
+init();
+</script>
+</body>
+</html>
